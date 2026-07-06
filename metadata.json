@@ -1,0 +1,6 @@
+{
+  "name": "PontoNeon",
+  "description": "Sistema de controle de ponto de funcionários extremamente leve, com banco de dados SQL local e visual Glassmorphism Dark com detalhes em Neon Verde.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
