@@ -92,7 +92,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Ex: 1234 ou admin"
+              placeholder="Ex: 6172 ou joao.rocha"
               className="w-full px-4 py-3 bg-zinc-950/60 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-[#00ff00]/50 focus:ring-1 focus:ring-[#00ff00]/20 focus:shadow-[0_0_10px_rgba(0,255,0,0.1)] transition-all placeholder:text-zinc-600 font-sans"
               disabled={loading}
             />
@@ -130,27 +130,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             )}
           </button>
         </form>
-
-        {/* Integrated Quick-Fill Example Logins */}
-        <div className="mt-6 pt-4 border-t border-zinc-900/60 text-center">
-          <p className="text-[10px] font-mono uppercase text-zinc-500 mb-2">Logins de Exemplo (Clique para preencher):</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill("admin", "admin")}
-              className="px-2.5 py-1.5 rounded-lg bg-zinc-950/60 hover:bg-zinc-900 border border-zinc-900 hover:border-[#00ff00]/20 text-[10px] font-mono text-zinc-400 hover:text-[#00ff00] transition-all cursor-pointer"
-            >
-              admin / admin (Gestor)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill("1234", "1234")}
-              className="px-2.5 py-1.5 rounded-lg bg-zinc-950/60 hover:bg-zinc-900 border border-zinc-900 hover:border-[#00ff00]/20 text-[10px] font-mono text-zinc-400 hover:text-[#00ff00] transition-all cursor-pointer"
-            >
-              1234 / 1234 (Funcionário)
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

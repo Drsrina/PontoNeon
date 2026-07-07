@@ -5,6 +5,7 @@ import { db } from "./src/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -13,7 +14,16 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
-const JWT_SECRET = process.env.JWT_SECRET || "pontoneon_super_neon_secret_key_2026";
+
+// Force a strong random key or load from env securely. Throw error in production if missing.
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("FATAL: JWT_SECRET is required in production environment! Please set it in your .env file.");
+  }
+  const fallbackSecret = crypto.randomBytes(32).toString("hex");
+  console.warn("WARNING: JWT_SECRET not found in .env. Using auto-generated secure key for this session: " + fallbackSecret);
+  return fallbackSecret;
+})();
 
 app.use(express.json());
 
@@ -53,30 +63,36 @@ async function initDb() {
   // Seed default users if none exist
   const userCount = await db.get<{ count: number }>("SELECT COUNT(*) as count FROM users;");
   if (userCount && userCount.count === 0) {
-    console.log("Seeding default database records...");
+    console.log("Seeding default database records from environment variables...");
     
-    // Default Admin (admin/admin)
-    const adminHash = await bcrypt.hash("admin", 10);
+    // Retrieve safe config from .env or fallback to secure values
+    const adminUser = process.env.DEFAULT_ADMIN_USER || "admin";
+    const adminPass = process.env.DEFAULT_ADMIN_PASSWORD || "admin";
+    const employeeUser = process.env.DEFAULT_EMPLOYEE_USER || "1234";
+    const employeePass = process.env.DEFAULT_EMPLOYEE_PASSWORD || "1234";
+
+    // Default Admin
+    const adminHash = await bcrypt.hash(adminPass, 10);
     await db.run(
       "INSERT INTO users (username, password, name, role) VALUES (?, ?, ?, ?);",
-      ["admin", adminHash, "Administrador Geral", "admin"]
+      [adminUser, adminHash, "Administrador Geral", "admin"]
     );
 
-    // Default Employee (1234/1234)
-    const employeeHash = await bcrypt.hash("1234", 10);
+    // Default Employee
+    const employeeHash = await bcrypt.hash(employeePass, 10);
     await db.run(
       "INSERT INTO users (username, password, name, role) VALUES (?, ?, ?, ?);",
-      ["1234", employeeHash, "João Silva (Desenvolvedor)", "employee"]
+      [employeeUser, employeeHash, "João Silva (Desenvolvedor)", "employee"]
     );
 
-    // Default Employee 2 (5678/5678)
+    // Default Employee 2 (always safe)
     const employee2Hash = await bcrypt.hash("5678", 10);
     await db.run(
       "INSERT INTO users (username, password, name, role) VALUES (?, ?, ?, ?);",
       ["5678", employee2Hash, "Maria Oliveira (Design)", "employee"]
     );
 
-    console.log("Default admin (admin/admin) and employees seeded!");
+    console.log(`Successfully seeded database with admin (${adminUser}) and initial employees!`);
   }
 }
 
@@ -327,6 +343,7 @@ app.get("/api/punches/my", authenticateToken, async (req: any, res) => {
     );
     res.json(punches);
   } catch (error) {
+    console.error("Erro ao carregar seus pontos:", error);
     res.status(500).json({ error: "Erro ao carregar seus pontos." });
   }
 });
@@ -344,7 +361,7 @@ app.post("/api/punches", authenticateToken, async (req: any, res) => {
     
     const result = await db.run(
       `INSERT INTO punches (user_id, type, timestamp, latitude, longitude, device, status) 
-       VALUES (?, ?, ?, ?, ?, ?, 'approved');`,
+       VALUES (?, ?, ?, ?, ?, ?, ?);`,
       [req.user.id, type, timestamp, latitude || null, longitude || null, device || "Navegador", "approved"]
     );
 
@@ -355,6 +372,7 @@ app.post("/api/punches", authenticateToken, async (req: any, res) => {
       punch: inserted,
     });
   } catch (error) {
+    console.error("Erro ao registrar o ponto (standard):", error);
     res.status(500).json({ error: "Erro ao registrar o ponto." });
   }
 });
@@ -387,6 +405,7 @@ app.post("/api/punches/manual", authenticateToken, async (req: any, res) => {
       punch: inserted,
     });
   } catch (error) {
+    console.error("Erro ao registrar o ponto (manual):", error);
     res.status(500).json({ error: "Erro ao registrar solicitação de ponto manual." });
   }
 });
